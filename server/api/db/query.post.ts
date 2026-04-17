@@ -43,13 +43,14 @@ export default defineEventHandler(async (event) => {
     await ensureTables();
 
     // Use a fullResults neon client so we get rowCount + field names even
-    // for queries that return no rows.
+    // for queries that return no rows. The `.query()` method is required for
+    // raw-string queries (the callable form is reserved for tagged templates).
     const url = process.env.DATABASE_URL!;
     const fullSql = neon(url, { fullResults: true });
 
     const started = Date.now();
     try {
-        const result: any = await fullSql(withoutTrailingSemi);
+        const result: any = await fullSql.query(withoutTrailingSemi, []);
         const elapsed = Date.now() - started;
         const rows: any[] = Array.isArray(result?.rows) ? result.rows : [];
         const fields: Array<{ name: string; dataTypeID?: number }> = Array.isArray(result?.fields)

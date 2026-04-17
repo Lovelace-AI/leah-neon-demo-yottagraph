@@ -230,10 +230,19 @@
 
     const props = defineProps<{ dbConnected: boolean }>();
 
-    const defaultSql = `SELECT id, neid, name, flavor, imported_at
+    // A friendly default: show every entity with a few of its most useful
+    // properties pulled out of the JSONB column. The COALESCE lines fall
+    // back to '—' so nulls don't look confusing, and the output fits on
+    // one screen.
+    const defaultSql = `SELECT
+    name,
+    flavor AS type,
+    COALESCE(properties->>'country', '—')  AS country,
+    COALESCE(properties->>'industry', '—') AS industry,
+    COALESCE(properties->>'ticker', '—')   AS ticker,
+    imported_at
 FROM imported_entities
-ORDER BY imported_at DESC
-LIMIT 50;`;
+ORDER BY imported_at DESC;`;
 
     const sql = ref(defaultSql);
     const running = ref(false);
@@ -246,40 +255,77 @@ LIMIT 50;`;
 
     const defaultPlaceholder = `SELECT * FROM imported_entities LIMIT 10;`;
 
+    // Each example is small, self-contained, and demonstrates one SQL
+    // concept. The intent is that someone new to SQL can read them in
+    // order and understand what's possible.
     const examples = [
         {
-            label: 'Recent imports',
-            desc: 'Last 20 imported entities',
-            sql: `SELECT name, flavor, imported_at
+            label: 'All imports (flat)',
+            desc: 'Pull a few properties out of the JSONB column',
+            sql: `SELECT
+    name,
+    flavor AS type,
+    COALESCE(properties->>'country', '—')  AS country,
+    COALESCE(properties->>'industry', '—') AS industry,
+    imported_at
 FROM imported_entities
-ORDER BY imported_at DESC
-LIMIT 20;`,
+ORDER BY imported_at DESC;`,
         },
         {
-            label: 'Count by flavor',
-            desc: 'Group imported entities by type',
-            sql: `SELECT flavor, COUNT(*) AS n
+            label: 'Count by type',
+            desc: 'How many of each entity type have you imported?',
+            sql: `SELECT
+    flavor AS type,
+    COUNT(*) AS n
 FROM imported_entities
 GROUP BY flavor
 ORDER BY n DESC;`,
         },
         {
-            label: 'Properties as JSON',
-            desc: 'Full property payload for one entity',
-            sql: `SELECT name, properties
+            label: 'Companies by country',
+            desc: 'Filter by type, group by an extracted property',
+            sql: `SELECT
+    COALESCE(properties->>'country', 'unknown') AS country,
+    COUNT(*) AS companies
 FROM imported_entities
-ORDER BY imported_at DESC
-LIMIT 5;`,
+WHERE flavor = 'organization'
+GROUP BY country
+ORDER BY companies DESC;`,
         },
         {
-            label: 'Extract a property',
-            desc: 'Pull a value out of the JSONB column',
-            sql: `SELECT name,
-       properties->>'country' AS country,
-       properties->>'industry' AS industry
+            label: 'Full property payload',
+            desc: 'See everything we stored for each entity',
+            sql: `SELECT name, flavor, properties
 FROM imported_entities
-WHERE properties ? 'country'
 ORDER BY name;`,
+        },
+        {
+            label: 'What properties exist?',
+            desc: 'Every JSON key that appears across all entities',
+            sql: `SELECT
+    jsonb_object_keys(properties) AS property,
+    COUNT(*) AS entities_with_it
+FROM imported_entities
+GROUP BY property
+ORDER BY entities_with_it DESC, property;`,
+        },
+        {
+            label: 'Search by name',
+            desc: 'Case-insensitive substring match with ILIKE',
+            sql: `SELECT name, flavor, properties->>'ticker' AS ticker
+FROM imported_entities
+WHERE name ILIKE '%bank%'
+ORDER BY name;`,
+        },
+        {
+            label: 'Imports per day',
+            desc: 'Bucket by day to see your activity over time',
+            sql: `SELECT
+    DATE_TRUNC('day', imported_at)::date AS day,
+    COUNT(*) AS imports
+FROM imported_entities
+GROUP BY day
+ORDER BY day DESC;`,
         },
     ];
 
