@@ -1,0 +1,30 @@
+# Broadchurch project configuration
+# Auto-generated during tenant provisioning.
+
+gcp:
+  project: broadchurch
+  region: us-central1
+  staging_bucket: broadchurch-agent-staging
+
+tenant:
+  project_name: "leah-neon-demo"
+  display_name: "leah-neon-demo"
+  org_id: "org_1Mg3pGgl1ZSOiHcq"
+  service_account: "tenant-1mg3pggl1zsoihcq@broadchurch.iam.gserviceaccount.com"
+
+gateway:
+  url: "https://broadchurch-portal-194773164895.us-central1.run.app"
+  qs_api_key: "6ba52638a22be0060a6d94329e7c4734b0bf958c4a3da5e3ee585dce2717077c"
+
+query_server:
+  url: "https://query.news.prod.g.lovelace.ai"
+  audience: "queryserver:api"
+
+auth:
+  client_id: "Xr5k33T3okCaQC7V7sD51AFjeMdNv4A7"
+  audience: "queryserver:api"
+
+aether:
+  data_mode: "api-mcp"
+
+agents: {}
