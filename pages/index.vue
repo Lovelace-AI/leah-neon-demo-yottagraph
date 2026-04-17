@@ -1,150 +1,94 @@
 <template>
     <div class="home-page">
-        <div class="home-content">
-            <div class="hero-section">
-                <img src="/LL-logo-full-wht.svg" alt="Lovelace" class="hero-logo" />
-                <h1 class="hero-title">{{ appName || 'Welcome to Aether' }}</h1>
-                <p class="hero-subtitle">Your AI-powered workspace is ready.</p>
-            </div>
-
-            <div class="getting-started">
-                <h2 class="section-title">Getting Started</h2>
-                <div class="steps-grid">
-                    <div class="step-item">
-                        <span class="step-number">1</span>
-                        <div>
-                            <div class="step-title">Describe what you want</div>
-                            <div class="step-desc">
-                                Edit <code>DESIGN.md</code> with your project vision. The AI agent
-                                reads this first to understand what to build.
-                            </div>
-                        </div>
-                    </div>
-                    <div class="step-item">
-                        <span class="step-number">2</span>
-                        <div>
-                            <div class="step-title">Build it</div>
-                            <div class="step-desc">
-                                Run <code>/build_my_app</code> in Cursor. The agent will design and
-                                implement your app based on the brief.
-                            </div>
-                        </div>
-                    </div>
-                    <div class="step-item">
-                        <span class="step-number">3</span>
-                        <div>
-                            <div class="step-title">Deploy</div>
-                            <div class="step-desc">
-                                Push to main to auto-deploy on Vercel. Use
-                                <code>/deploy_agent</code> or <code>/deploy_mcp</code> for backend
-                                services.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="home-header">
+            <PageHeader title="Neon + Elemental Knowledge Graph" icon="mdi-database-arrow-down" />
+            <DbStatusBar v-model:status="dbStatus" @refresh="refreshStatus" />
         </div>
+
+        <v-tabs
+            v-model="activeTab"
+            color="primary"
+            density="comfortable"
+            slider-color="primary"
+            class="tabs-bar"
+        >
+            <v-tab value="import">
+                <v-icon start>mdi-cloud-download-outline</v-icon>
+                Import from API
+            </v-tab>
+            <v-tab value="query">
+                <v-icon start>mdi-console</v-icon>
+                Query Database
+            </v-tab>
+        </v-tabs>
+
+        <v-window v-model="activeTab" class="home-window">
+            <v-window-item value="import" class="home-pane">
+                <ImportTab :db-connected="dbStatus?.connected === true" @imported="refreshStatus" />
+            </v-window-item>
+            <v-window-item value="query" class="home-pane">
+                <QueryTab :db-connected="dbStatus?.connected === true" />
+            </v-window-item>
+        </v-window>
     </div>
 </template>
 
 <script setup lang="ts">
-    const { appName } = useAppInfo();
+    interface DbStatus {
+        configured: boolean;
+        connected: boolean;
+        rowCount?: number;
+        message?: string;
+    }
+
+    const activeTab = ref<'import' | 'query'>('import');
+    const dbStatus = ref<DbStatus | null>(null);
+
+    async function refreshStatus() {
+        try {
+            dbStatus.value = await $fetch<DbStatus>('/api/db/status');
+        } catch (err: any) {
+            dbStatus.value = {
+                configured: false,
+                connected: false,
+                message: err?.message ?? 'Failed to reach /api/db/status',
+            };
+        }
+    }
+
+    await refreshStatus();
 </script>
 
 <style scoped>
     .home-page {
         height: 100%;
-        overflow-y: auto;
-        display: flex;
-        justify-content: center;
-        padding: 48px 24px;
-    }
-
-    .home-content {
-        max-width: 720px;
-        width: 100%;
-    }
-
-    .hero-section {
-        text-align: center;
-        margin-bottom: 48px;
-    }
-
-    .hero-logo {
-        height: 2rem;
-        width: auto;
-        margin-bottom: 24px;
-        opacity: 0.6;
-    }
-
-    .hero-title {
-        font-family: var(--font-headline);
-        font-weight: 400;
-        font-size: 2rem;
-        letter-spacing: 0.02em;
-        margin-bottom: 8px;
-    }
-
-    .hero-subtitle {
-        color: var(--lv-silver);
-        font-size: 1.1rem;
-    }
-
-    .getting-started {
-        margin-bottom: 48px;
-    }
-
-    .section-title {
-        font-family: var(--font-headline);
-        font-weight: 400;
-        font-size: 1.1rem;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        color: var(--lv-silver);
-        margin-bottom: 20px;
-    }
-
-    .steps-grid {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        padding: 16px 24px 0;
+        gap: 12px;
+        overflow: hidden;
     }
 
-    .step-item {
+    .home-header {
         display: flex;
-        gap: 16px;
-        align-items: flex-start;
-    }
-
-    .step-number {
+        flex-direction: column;
+        gap: 8px;
         flex-shrink: 0;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: var(--lv-surface);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: var(--font-mono);
-        font-size: 0.8rem;
-        color: var(--lv-green);
-        margin-top: 2px;
     }
 
-    .step-title {
-        font-weight: 500;
-        margin-bottom: 2px;
+    .tabs-bar {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        flex-shrink: 0;
     }
 
-    .step-desc {
-        color: var(--lv-silver);
-        font-size: 0.875rem;
-        line-height: 1.4;
+    .home-window {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
     }
 
-    .step-desc code {
-        font-size: 0.85em;
-        padding: 1px 5px;
+    .home-pane {
+        height: 100%;
+        overflow: hidden;
     }
 </style>
