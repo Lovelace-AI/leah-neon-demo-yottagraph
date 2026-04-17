@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "lovelace-elemental": {
+      "url": "https://broadchurch-portal-194773164895.us-central1.run.app/api/mcp/org_1Mg3pGgl1ZSOiHcq/elemental/mcp"
+    },
+    "lovelace-stocks": {
+      "url": "https://broadchurch-portal-194773164895.us-central1.run.app/api/mcp/org_1Mg3pGgl1ZSOiHcq/stocks/mcp"
+    },
+    "lovelace-wiki": {
+      "url": "https://broadchurch-portal-194773164895.us-central1.run.app/api/mcp/org_1Mg3pGgl1ZSOiHcq/wiki/mcp"
+    },
+    "lovelace-polymarket": {
+      "url": "https://broadchurch-portal-194773164895.us-central1.run.app/api/mcp/org_1Mg3pGgl1ZSOiHcq/polymarket/mcp"
+    },
+    "vuetify-mcp": {
+      "url": "https://mcp.vuetifyjs.com/mcp"
+    }
+  }
+}
